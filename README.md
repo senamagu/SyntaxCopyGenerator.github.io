@@ -1,1 +1,1 @@
-# https://senamagu.github.io/Guessthenumber.github.io/
+# https://senamagu.github.io/CopyGenerator.github.io/
