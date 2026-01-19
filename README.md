@@ -1,1 +1,1 @@
-# senamagu.github.io
+# https://senamagu.github.io/Guessthenumber.github.io/
