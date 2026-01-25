@@ -1,33 +1,46 @@
-<html lang="ja"><head>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
     <meta charset="UTF-8">
-    <title>構文ジェネレーター改</title>
+    <title>構文ジェネレーター改（タイプ5・ボタン調整版）</title>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <style>
         body { font-family: sans-serif; background-color: #f0f0f0; display: flex; justify-content: center; padding: 20px; }
         .container { background-color: #e0e0e0; width: 100%; max-width: 1000px; padding: 20px; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; }
         
         #item-list { margin-bottom: 20px; }
-        .item-row { display: flex; align-items: flex-start; margin-bottom: 15px; position: relative; background: transparent; padding: 5px; border-radius: 4px; }
+        .item-row { display: flex; align-items: flex-start; margin-bottom: 15px; position: relative; background: #e0e0e0; padding: 10px; border-radius: 4px; }
         
         .sortable-ghost { opacity: 0.4; background-color: #cfcfcf; }
 
         .btn-remove { width: 18px; height: 4px; background-color: #ff4d79; border: none; cursor: pointer; margin-top: 12px; margin-right: 10px; padding: 0; flex-shrink: 0; }
         
-        .label-input { 
-            font-weight: bold; background: transparent; border: none; 
-            font-size: 18px; color: #000; resize: none; overflow: hidden;
-            font-family: inherit; width: 200px; min-height: 1.2em;
+        textarea { 
+            border: none; padding: 5px 8px; border-radius: 2px; 
+            resize: none; overflow: hidden; font-family: inherit; font-size: 16px; 
+            min-height: 1.2em; display: block; color: #000000;
         }
-        
+
+        .label-input { font-weight: bold; background: transparent; width: 150px; color: #000000; }
         .label-full { width: 100% !important; }
 
-        .text-input { 
-            background-color: #f0f0f0; border: none; padding: 5px 8px; 
-            border-radius: 2px; width: 100%; margin: 2px 0;
-            resize: none; overflow: hidden; font-family: inherit;
-            font-size: 16px; display: block; min-height: 1.2em;
+        .text-input { background-color: #f0f0f0; width: 100%; margin: 2px 0; color: #000000; }
+        
+        .type-custom-container { display: flex; flex-wrap: wrap; align-items: flex-start; flex-grow: 1; gap: 8px; }
+        .custom-unit { display: flex; align-items: flex-start; background: #e0e0e0; padding: 2px; border-radius: 4px; position: relative; }
+        
+        /* バツボタンの配置修正：中央揃え */
+        .btn-unit-del { 
+            font-size: 10px; background: #666; color: #fff; border: none; cursor: pointer; 
+            border-radius: 50%; width: 14px; height: 14px; 
+            display: flex; align-items: center; justify-content: center;
+            margin-right: 2px; flex-shrink: 0; margin-top: 5px;
+            line-height: 1; padding: 0;
         }
         
+        .custom-controls { display: flex; flex-direction: column; gap: 5px; margin-left: 5px; }
+        .btn-add-unit { font-size: 11px; padding: 2px 5px; cursor: pointer; border: 1px solid #999; border-radius: 3px; background: #fff; color: #333; }
+
         .type-right, .type-sandwich { display: flex; align-items: flex-start; flex-grow: 1; gap: 5px; }
         .type-below, .type-only { display: flex; flex-direction: column; flex-grow: 1; }
 
@@ -36,32 +49,28 @@
         .add-section { margin-top: 10px; border-top: 1px solid #ccc; padding-top: 10px; }
         .btn-plus { color: #00a2ff; background: none; border: none; font-size: 40px; cursor: pointer; padding: 0; line-height: 0.8; }
         .add-menu { display: none; margin-top: 5px; border: 1px solid #ccc; background: #fff; padding: 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .add-menu button { display: block; width: 100%; text-align: left; font-size: 14px; margin-bottom: 5px; padding: 8px; cursor: pointer; background: #f9f9f9; border: 1px solid #ddd; }
+        .add-menu button { display: block; width: 100%; text-align: left; font-size: 14px; margin-bottom: 5px; padding: 8px; cursor: pointer; background: #f9f9f9; border: 1px solid #e0e0e0; }
 
         .footer-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 30px; }
-        .btn-footer { border: 2px solid #333; background: white; padding: 10px; font-weight: bold; border-radius: 8px; cursor: pointer; text-align: center; }
+        .btn-footer { border: 2px solid #333; background: white; padding: 10px; font-weight: bold; border-radius: 8px; cursor: pointer; text-align: center; color: #000; }
         .btn-copy { grid-column: span 2; background: #333; color: white; font-size: 16px; }
 
-        /* ファイル入力用の隠し要素 */
         #file-input { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="item-list"><div class="item-row" data-type="right"><button class="btn-remove" onclick="this.parentElement.remove()"></button>
-                <div class="type-right">
-                    <textarea class="label-input" oninput="autoResize(this)" rows="1" style="height: 32px;">項目</textarea>
-                    <textarea class="text-input" rows="1" oninput="autoResize(this)" style="height: 35px;"></textarea>
-                </div><div class="drag-handle">＝</div></div></div>
+    <div id="item-list"></div>
 
     <div class="add-section">
         <button class="btn-plus" onclick="toggleMenu()">＋</button>
-        <div class="add-menu" id="add-menu" style="display: none;">
+        <div class="add-menu" id="add-menu">
             <button onclick="addItem('right')">タイプ1: [項目]{テキスト}</button>
             <button onclick="addItem('below')">タイプ2: [項目] 改行 {テキスト}</button>
             <button onclick="addItem('sandwich')">タイプ3: [項目]{テキスト}[項目]</button>
             <button onclick="addItem('only')">タイプ4: [項目]</button>
+            <button onclick="addItem('custom')">タイプ5: 自由配置（＋で増やす）</button>
         </div>
     </div>
 
@@ -90,88 +99,132 @@
         el.style.height = el.scrollHeight + 'px';
     }
 
+    function createUnit(unitType, val = "") {
+        const div = document.createElement('div');
+        div.className = 'custom-unit';
+        div.dataset.unitType = unitType;
+        
+        const isLabel = unitType === 'label';
+        // プレースホルダーを消し、ラベル（項目）の場合はデフォルト値に「項目」を入れる
+        let finalVal = val;
+        if (isLabel && !val) finalVal = "項目";
+
+        const cls = isLabel ? "label-input" : "text-input";
+        
+        div.innerHTML = `
+            <button class="btn-unit-del" onclick="this.parentElement.remove()">×</button>
+            <textarea class="${cls}" oninput="autoResize(this)" rows="1">${finalVal}</textarea>
+        `;
+        return div;
+    }
+
     function addItem(type, data = null) {
         const div = document.createElement('div');
         div.className = 'item-row';
         div.dataset.type = type;
 
-        const labelVal = data ? data.label : "項目";
-        const labelPostVal = data ? data.labelPost : "項目";
-        const textVal = data ? data.text : "";
-
         let contentHTML = `<button class="btn-remove" onclick="this.parentElement.remove()"></button>`;
 
-        if (type === 'right') {
-            contentHTML += `
-                <div class="type-right">
-                    <textarea class="label-input" oninput="autoResize(this)" rows="1">${labelVal}</textarea>
-                    <textarea class="text-input" rows="1" oninput="autoResize(this)">${textVal}</textarea>
-                </div>`;
-        } else if (type === 'below') {
-            contentHTML += `
-                <div class="type-below">
-                    <div><textarea class="label-input" oninput="autoResize(this)" rows="1">${labelVal}</textarea></div>
-                    <textarea class="text-input" rows="1" oninput="autoResize(this)">${textVal}</textarea>
-                </div>`;
-        } else if (type === 'sandwich') {
-            contentHTML += `
-                <div class="type-sandwich">
-                    <textarea class="label-input label-pre" oninput="autoResize(this)" rows="1">${labelVal}</textarea>
-                    <textarea class="text-input" rows="1" oninput="autoResize(this)">${textVal}</textarea>
-                    <textarea class="label-input label-post" oninput="autoResize(this)" rows="1">${labelPostVal}</textarea>
-                </div>`;
-        } else if (type === 'only') {
-            contentHTML += `
-                <div class="type-only">
-                    <div><textarea class="label-input label-full" oninput="autoResize(this)" rows="1">${labelVal}</textarea></div>
-                </div>`;
+        if (type === 'custom') {
+            div.innerHTML = contentHTML + `
+                <div class="type-custom-container" id="custom-area"></div>
+                <div class="custom-controls">
+                    <button class="btn-add-unit" onclick="addUnitToRow(this, 'label')">＋枠</button>
+                    <button class="btn-add-unit" onclick="addUnitToRow(this, 'text')">＋文</button>
+                </div>
+                <div class="drag-handle">＝</div>`;
+            
+            const area = div.querySelector('#custom-area');
+            if (data && data.units) {
+                data.units.forEach(u => area.appendChild(createUnit(u.unitType, u.val)));
+            } else {
+                area.appendChild(createUnit('label'));
+                area.appendChild(createUnit('text'));
+            }
+        } else {
+            const labelVal = data ? data.label : "項目";
+            const labelPostVal = data ? data.labelPost : "項目";
+            const textVal = data ? data.text : "";
+
+            if (type === 'right') {
+                contentHTML += `
+                    <div class="type-right">
+                        <textarea class="label-input" oninput="autoResize(this)" rows="1">${labelVal}</textarea>
+                        <textarea class="text-input" rows="1" oninput="autoResize(this)">${textVal}</textarea>
+                    </div>`;
+            } else if (type === 'below') {
+                contentHTML += `
+                    <div class="type-below">
+                        <div><textarea class="label-input" oninput="autoResize(this)" rows="1">${labelVal}</textarea></div>
+                        <textarea class="text-input" rows="1" oninput="autoResize(this)">${textVal}</textarea>
+                    </div>`;
+            } else if (type === 'sandwich') {
+                contentHTML += `
+                    <div class="type-sandwich">
+                        <textarea class="label-input label-pre" oninput="autoResize(this)" rows="1">${labelVal}</textarea>
+                        <textarea class="text-input" rows="1" oninput="autoResize(this)">${textVal}</textarea>
+                        <textarea class="label-input label-post" oninput="autoResize(this)" rows="1">${labelPostVal}</textarea>
+                    </div>`;
+            } else if (type === 'only') {
+                contentHTML += `
+                    <div class="type-only">
+                        <div><textarea class="label-input label-full" oninput="autoResize(this)" rows="1">${labelVal}</textarea></div>
+                    </div>`;
+            }
+            contentHTML += `<div class="drag-handle">＝</div>`;
+            div.innerHTML = contentHTML;
         }
 
-        contentHTML += `<div class="drag-handle">＝</div>`;
-        div.innerHTML = contentHTML;
         itemList.appendChild(div);
-        
         div.querySelectorAll('textarea').forEach(el => autoResize(el));
         addMenu.style.display = 'none';
     }
 
-    // --- ファイル書き出し機能 ---
+    function addUnitToRow(btn, unitType) {
+        const area = btn.parentElement.parentElement.querySelector('.type-custom-container');
+        const unit = createUnit(unitType);
+        area.appendChild(unit);
+        autoResize(unit.querySelector('textarea'));
+    }
+
     function exportToFile() {
         const rows = document.querySelectorAll('.item-row');
         const dataToSave = [];
         rows.forEach(row => {
             const type = row.dataset.type;
-            const textEl = row.querySelector('.text-input');
-            const text = textEl ? textEl.value : "";
-            let label = "";
-            let labelPost = "";
-            if (type === 'sandwich') {
-                label = row.querySelector('.label-pre').value;
-                labelPost = row.querySelector('.label-post').value;
+            if (type === 'custom') {
+                const units = [];
+                row.querySelectorAll('.custom-unit').forEach(u => {
+                    units.push({ unitType: u.dataset.unitType, val: u.querySelector('textarea').value });
+                });
+                dataToSave.push({ type, units });
             } else {
-                label = row.querySelector('.label-input').value;
+                const textEl = row.querySelector('.text-input');
+                const text = textEl ? textEl.value : "";
+                let label = "", labelPost = "";
+                if (type === 'sandwich') {
+                    label = row.querySelector('.label-pre').value;
+                    labelPost = row.querySelector('.label-post').value;
+                } else {
+                    const labelInput = row.querySelector('.label-input');
+                    label = labelInput ? labelInput.value : "";
+                }
+                dataToSave.push({ type, label, labelPost, text });
             }
-            dataToSave.push({ type, label, labelPost, text });
         });
 
         const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = 'syntax_data.json';
-        a.click();
+        a.href = url; a.download = 'syntax_data.json'; a.click();
         URL.revokeObjectURL(url);
     }
 
-    // --- ファイル読み込み機能 ---
-    function triggerFileInput() {
-        document.getElementById('file-input').click();
-    }
+    function triggerFileInput() { document.getElementById('file-input').click(); }
 
     function importFromFile(input) {
         const file = input.files[0];
         if (!file) return;
-
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
@@ -180,10 +233,8 @@
                     itemList.innerHTML = "";
                     dataArray.forEach(item => addItem(item.type, item));
                 }
-            } catch (err) {
-                alert("ファイルの形式が正しくありません。");
-            }
-            input.value = ""; // 同じファイルを再度選択できるようにリセット
+            } catch (err) { alert("形式エラー"); }
+            input.value = "";
         };
         reader.readAsText(file);
     }
@@ -193,16 +244,16 @@
         let fullText = "";
         rows.forEach(row => {
             const type = row.dataset.type;
-            const textEl = row.querySelector('.text-input');
-            const text = textEl ? textEl.value : "";
-            if (type === 'right') {
-                fullText += `${row.querySelector('.label-input').value}${text}\n`;
-            } else if (type === 'below') {
-                fullText += `${row.querySelector('.label-input').value}\n${text}\n`;
-            } else if (type === 'sandwich') {
-                fullText += `${row.querySelector('.label-pre').value}${text}${row.querySelector('.label-post').value}\n`;
-            } else if (type === 'only') {
-                fullText += `${row.querySelector('.label-input').value}\n`;
+            if (type === 'custom') {
+                row.querySelectorAll('.custom-unit textarea').forEach(ta => fullText += ta.value);
+                fullText += "\n";
+            } else {
+                const textEl = row.querySelector('.text-input');
+                const text = textEl ? textEl.value : "";
+                if (type === 'right') fullText += `${row.querySelector('.label-input').value}${text}\n`;
+                else if (type === 'below') fullText += `${row.querySelector('.label-input').value}\n${text}\n`;
+                else if (type === 'sandwich') fullText += `${row.querySelector('.label-pre').value}${text}${row.querySelector('.label-post').value}\n`;
+                else if (type === 'only') fullText += `${row.querySelector('.label-input').value}\n`;
             }
         });
         navigator.clipboard.writeText(fullText.trim()).then(() => alert("コピーしました！"));
@@ -217,12 +268,10 @@
         }
     }
 
-    function clearAll() {
-        if (confirm("すべての項目を削除しますか？")) { itemList.innerHTML = ""; }
-    }
+    function clearAll() { if (confirm("すべて削除しますか？")) itemList.innerHTML = ""; }
 
     addItem('right');
 </script>
 
-
-</body></html>
+</body>
+</html>
