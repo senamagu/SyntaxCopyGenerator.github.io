@@ -1,1 +1,1 @@
-# https://senamagu.github.io/CopyGenerator.github.io/
+# https://senamagu.github.io/SyntaxCopyGenerator.github.io/
